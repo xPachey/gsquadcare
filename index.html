@@ -115,7 +115,9 @@ button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px
 .li { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; line-height: 1.4; }
 .li svg { flex-shrink: 0; margin-top: 1px; }
 .lab { font-size: 13px; font-weight: 700; color: var(--app-muted); }
-.pills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.pills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.langbtn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.trusted { margin: 0; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 12px; font-size: 13.5px; color: var(--muted); }
 .pill { height: 42px; border-radius: 10px; border: 1.5px solid #B9BDC2; background: #FFFFFF; color: var(--app-ink); font-size: 15px; }
 .pill[aria-pressed="true"] { background: var(--app-teal); border-color: var(--app-teal); color: #FFFFFF; font-weight: 700; }
 .abtn { min-height: 52px; border-radius: 14px; border: none; background: var(--app-teal); color: #FFFFFF; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; }
@@ -230,6 +232,16 @@ img { max-width: 100%; }
       <button type="button" class="btn ghost" id="reset">Reset demo</button>
     </div>
 
+    <h3>Mum's language</h3>
+    <div class="row" role="group" aria-label="Mum's language">
+      <button type="button" class="btn ghost langbtn" data-lang="en" aria-pressed="true">English</button>
+      <button type="button" class="btn ghost langbtn" data-lang="ms" aria-pressed="false">Bahasa Melayu</button>
+      <button type="button" class="btn ghost langbtn" data-lang="zh" aria-pressed="false" lang="zh">中文</button>
+    </div>
+
+    <h3>Trusted numbers</h3>
+    <p class="trusted" id="trusted">None yet. If Aisyah taps "False alarm" on an alert, the numbers involved are added here and will not trigger warnings again.</p>
+
     <h3>What the AI sees</h3>
     <div class="meter" aria-live="polite">
       <div class="meter-top">
@@ -240,7 +252,7 @@ img { max-width: 100%; }
       <div class="ticks" aria-hidden="true"><span style="left: 0%; transform: none">0</span><span style="left: 40%">40 tip</span><span style="left: 70%">70 alert</span><span style="left: 100%; transform: translateX(-100%)">100</span></div>
     </div>
     <ul class="signals" id="signals"><li class="empty">No signals yet. Run a scenario.</li></ul>
-    <p class="small">Simulated AI: this demo scores messages with keyword patterns in English and Bahasa Malaysia (it also catches spaced-out words). The real product uses a trained multilingual language model running on the phone, as described in Chapter 2.</p>
+    <p class="small">Simulated AI: this demo scores messages with keyword patterns in English, Bahasa Malaysia and Mandarin (it also catches spaced-out words). The real product uses a trained multilingual language model running on the phone, as described in Chapter 2.</p>
   </section>
 
   <section class="device" aria-label="Mum's phone">
@@ -255,7 +267,8 @@ img { max-width: 100%; }
           <p data-t="setupIntro" style="font-size: 15px; color: var(--app-muted)">Here is exactly what G-SquadCare does on this phone.</p>
           <div class="pills" role="group" aria-label="Language">
             <button type="button" class="pill" data-lang="en" aria-pressed="true">English</button>
-            <button type="button" class="pill" data-lang="ms" aria-pressed="false">Bahasa Melayu</button>
+            <button type="button" class="pill" data-lang="ms" aria-pressed="false">Bahasa</button>
+            <button type="button" class="pill" data-lang="zh" aria-pressed="false" lang="zh">中文</button>
           </div>
           <div class="card">
             <span class="lab" data-t="checks">What it checks</span>
@@ -503,6 +516,25 @@ img { max-width: 100%; }
       tip: function (parts) { return "Ia " + joinList(parts, "dan") + ". Semak dengan keluarga sebelum membalas atau membayar."; },
       parts: { authority: "mendakwa daripada polis atau pejabat kerajaan", fear: "mengatakan anda dalam masalah atau sedang disiasat", urgency: "mendesak anda bertindak segera", secrecy: "meminta anda merahsiakannya", money: "meminta anda memindahkan wang atau berkongsi kod", toogood: "menjanjikan pulangan terjamin", link: "mengandungi pautan" },
       recCall: "Panggilan nombor tidak dikenali disemak", recMsgOk: "Mesej disemak: tiada tanda amaran", recMsgMed: "Mesej dengan tanda amaran", recMsgHi: "Amaran penipuan ditunjukkan", recDeclined: "Panggilan tidak dikenali ditolak"
+    },
+    zh: {
+      setupTitle: "在保护您之前", setupIntro: "以下是 G-SquadCare 在这部手机上会做的事情。",
+      checks: "它会检查什么", check1: "谁打电话给您，以及通话多久", check2: "陌生发送者信息里的文字", check3: "通话期间是否打开了银行应用",
+      never: "它绝不会做什么", never1: "录音或监听您的通话", never2: "把您的信息给任何人看，包括家人",
+      consent: "我明白并同意。如果可能有诈骗，Aisyah（我的女儿）会收到提醒。", start: "开启保护",
+      today: "今天", on: "保护已开启", onSub: "正在检查陌生号码的来电和信息。", recent: "最近检查", family: "您的家人", familySub: "可能有诈骗时会收到提醒",
+      incoming: "来电", unknown: "陌生号码", notVerified: "未经验证", watching: "G-SquadCare 正在留意这通电话的资料",
+      speed: "演示以 200 倍速度播放通话时间", bankOpened: "通话期间打开了银行应用", protOn: "保护已开启 · 通话不会被录音",
+      warnTitle: "请暂停。这可能是诈骗。", warnSub: "Pause. This may be a scam.", warnDo: "请先不要转账或分享任何验证码。",
+      why: "为什么我们提醒您", remind: "真正的警察和银行绝不会要求您转钱，或要求您对通话保密。",
+      callFam: "立即打给 Aisyah", call997: "拨打 NSRC 997", freeze: "冻结我的银行账户", alerted: "Aisyah 已收到提醒，可能会打电话给您。", dismiss: "我认识这个来电者。关闭",
+      tipTitle: "这条信息有一些警告迹象", tipOk: "好的，我会小心", tipDel: "删除这条信息",
+      rCall: function (m) { return "您已经和一个无法验证的号码通话了 " + m + " 分钟。"; },
+      rBank: "通话期间，您的银行应用被打开了。",
+      rMsg: function (parts) { return "一条新信息" + parts.join("，") + "。"; },
+      tip: function (parts) { return "它" + parts.join("，") + "。回复或付款前，请先和家人确认。"; },
+      parts: { authority: "自称来自警察或政府部门", fear: "说您有麻烦或正在被调查", urgency: "催促您马上行动", secrecy: "要求您保密", money: "要求您转钱或分享验证码", toogood: "承诺保证回报", link: "含有链接" },
+      recCall: "已检查陌生号码来电", recMsgOk: "信息已检查：没有警告迹象", recMsgMed: "有警告迹象的信息", recMsgHi: "已显示诈骗警告", recDeclined: "已拒接陌生来电"
     }
   };
   var FAM_PARTS = { authority: "claims to be police or a government office", fear: "says she is in trouble or under investigation", urgency: "pushes her to act now", secrecy: "asks her to keep it secret", money: "asks her to move money or share a code", toogood: "promises guaranteed returns", link: "contains a link" };
@@ -514,12 +546,12 @@ img { max-width: 100%; }
 
   /* ---------- simulated AI ---------- */
   var CATS = [
-    { key: "authority", label: "Claims authority", pts: 10, words: ["police", "polis", "pdrm", "inspector", "inspektor", "officer", "pegawai", "bank negara", "lhdn", "court", "mahkamah", "customs", "kastam", "mcmc", "sprm", "macc", "government", "kerajaan"] },
-    { key: "fear", label: "Threat or fear", pts: 10, words: ["investigation", "siasatan", "disiasat", "money laundering", "pengubahan wang haram", "arrest", "ditangkap", "tangkap", "warrant", "waran", "legal action", "tindakan undang", "suspended", "disekat", "frozen", "dibekukan", "case", "kes jenayah", "terlibat"] },
-    { key: "urgency", label: "Urgency", pts: 5, words: ["today", "hari ini", "immediately", "segera", "right now", "sekarang", "urgent", "within 24 hours", "cepat"] },
-    { key: "secrecy", label: "Asks for secrecy", pts: 15, words: ["don't tell", "dont tell", "do not tell", "jangan beritahu", "jangan bagitahu", "keep this between us", "keep it secret", "secret", "rahsia", "confidential", "sulit"] },
-    { key: "money", label: "Money or code request", pts: 15, words: ["transfer", "pindahkan", "safe account", "akaun selamat", "tac", "otp", "pin number", "deposit", "pay rm", "bayar", "send money", "hantar wang", "simpanan"] },
-    { key: "toogood", label: "Too good to be true", pts: 15, words: ["guaranteed", "dijamin", "returns", "pulangan", "profit", "untung", "vip investment", "pelaburan"] },
+    { key: "authority", label: "Claims authority", pts: 10, words: ["police", "polis", "pdrm", "inspector", "inspektor", "officer", "pegawai", "bank negara", "lhdn", "court", "mahkamah", "customs", "kastam", "mcmc", "sprm", "macc", "government", "kerajaan", "警察", "警方", "警官", "国家银行", "法庭", "海关", "政府"] },
+    { key: "fear", label: "Threat or fear", pts: 10, words: ["investigation", "siasatan", "disiasat", "money laundering", "pengubahan wang haram", "arrest", "ditangkap", "tangkap", "warrant", "waran", "legal action", "tindakan undang", "suspended", "disekat", "frozen", "dibekukan", "case", "kes jenayah", "terlibat", "调查", "洗钱", "逮捕", "通缉", "冻结", "犯罪"] },
+    { key: "urgency", label: "Urgency", pts: 5, words: ["today", "hari ini", "immediately", "segera", "right now", "sekarang", "urgent", "within 24 hours", "cepat", "今天", "立即", "马上", "紧急"] },
+    { key: "secrecy", label: "Asks for secrecy", pts: 15, words: ["don't tell", "dont tell", "do not tell", "jangan beritahu", "jangan bagitahu", "keep this between us", "keep it secret", "secret", "rahsia", "confidential", "sulit", "不要告诉", "保密", "秘密"] },
+    { key: "money", label: "Money or code request", pts: 15, words: ["transfer", "pindahkan", "safe account", "akaun selamat", "tac", "otp", "pin number", "deposit", "pay rm", "bayar", "send money", "hantar wang", "simpanan", "转账", "转钱", "安全账户", "验证码", "汇款", "存款"] },
+    { key: "toogood", label: "Too good to be true", pts: 15, words: ["guaranteed", "dijamin", "returns", "pulangan", "profit", "untung", "vip investment", "pelaburan", "保证", "回报", "投资", "高利润"] },
     { key: "link", label: "Contains a link", pts: 10, words: ["http", "www.", "bit.ly", ".link", "tinyurl"] }
   ];
 
@@ -530,6 +562,7 @@ img { max-width: 100%; }
     CATS.forEach(function (c) {
       var hit = c.words.some(function (w) {
         if (c.key === "link") return low.indexOf(w) !== -1;
+        if (/[^\x00-\x7F]/.test(w)) return low.indexOf(w) !== -1;
         if (w.length <= 3) return new RegExp("\\b" + w + "\\b").test(low);
         return low.indexOf(w) !== -1 || squashed.indexOf(w.replace(/[\s.\-]+/g, "")) !== -1;
       });
@@ -539,7 +572,12 @@ img { max-width: 100%; }
   }
 
   /* ---------- state ---------- */
-  var state = { lang: "en", setup: false, score: 0, timers: [], call: null, alertActive: false };
+  var state = { lang: "en", setup: false, score: 0, timers: [], call: null, alertActive: false, trusted: [], runNumbers: [], trustedCall: false };
+  var CALLER = "+60 3-7621 0458";
+  function isTrusted(n) { return state.trusted.indexOf(n) >= 0; }
+  function renderTrusted() {
+    $("trusted").textContent = state.trusted.length ? "Trusted by the family: " + state.trusted.join(", ") + ". Calls and messages from these numbers are scored as safe." : "None yet. If Aisyah taps \"False alarm\" on an alert, the numbers involved are added here and will not trigger warnings again.";
+  }
   var counts = { calls: 0, msgs: 0, alerts: 0 };
 
   function later(fn, ms) { var id = setTimeout(fn, ms); state.timers.push(id); return id; }
@@ -550,6 +588,7 @@ img { max-width: 100%; }
     return h + ":" + (m < 10 ? "0" : "") + m + " " + ap;
   }
   function t(key) { return T[state.lang][key]; }
+  function L(en, ms, zh) { return state.lang === "ms" ? ms : state.lang === "zh" ? zh : en; }
 
   function show(phone, id) {
     var root = $(phone);
@@ -565,7 +604,7 @@ img { max-width: 100%; }
     Array.prototype.forEach.call(document.querySelectorAll("#mum [data-t]"), function (el) {
       var v = t(el.dataset.t); if (typeof v === "string") el.textContent = v;
     });
-    Array.prototype.forEach.call(document.querySelectorAll("#mum .pill"), function (p) {
+    Array.prototype.forEach.call(document.querySelectorAll("#mum .pill, .langbtn"), function (p) {
       p.setAttribute("aria-pressed", p.dataset.lang === state.lang ? "true" : "false");
     });
   }
@@ -634,7 +673,7 @@ img { max-width: 100%; }
   }
   function connected(who) {
     var end = function () { $("m-ovl").hidden = true; $("f-ovl").hidden = true; afterCall(); };
-    mumOverlay(state.lang === "ms" ? "Disambungkan dengan Aisyah" : "Connected to Aisyah", state.lang === "ms" ? "Demo: tiada panggilan sebenar dibuat." : "Demo: no real call is made.", null, null, state.lang === "ms" ? "Tamat" : "End call", end);
+    mumOverlay(L("Connected to Aisyah", "Disambungkan dengan Aisyah", "已接通 Aisyah"), L("Demo: no real call is made.", "Demo: tiada panggilan sebenar dibuat.", "演示：没有拨出真实电话。"), null, null, L("End call", "Tamat", "结束通话"), end);
     famOverlay("Connected to Mum", "Demo: no real call is made.", null, null, "End call", end);
     if (state.alertActive) addTimeline(who === "mum" ? "Mum called you" : "You called Mum", true);
   }
@@ -658,21 +697,23 @@ img { max-width: 100%; }
 
   function resetRun() {
     clearTimers(); hideAllOverlays(); clearSignals();
-    state.call = null; state.alertActive = false;
+    state.call = null; state.alertActive = false; state.runNumbers = []; state.trustedCall = false;
     $("m-bank").hidden = true; $("m-timer").textContent = "00:00";
     if (state.setup) show("mum", "m-home");
     show("fam", "f-home");
   }
 
   function deliverMessage(from, text, known, extra) {
+    var trusted = isTrusted(from);
+    if (trusted) known = true; else if (!known) state.runNumbers.push(from);
     $("m-notif-from").textContent = from;
     $("m-notif-text").textContent = text;
     $("m-notif").classList.add("show");
-    addSignal("Message arrives from " + (known ? "a saved contact" : "an unknown sender"), "Message", known ? 0 : 10);
+    addSignal("Message arrives from " + (trusted ? "a number the family marked as trusted" : known ? "a saved contact" : "an unknown sender"), "Message", known ? 0 : 10);
     later(function () {
       var found = analyseText(text);
       if (known) {
-        addSignal(found.length ? "Saved contact: patterns weighed lower" : "No scam patterns in message", "Language AI", 0);
+        addSignal(found.length ? (trusted ? "Trusted number: patterns weighed lower" : "Saved contact: patterns weighed lower") : "No scam patterns in message", "Language AI", 0);
         found.forEach(function (c) { addSignal(c.label, "Language AI", Math.round(c.pts / 3)); });
       } else if (!found.length) {
         addSignal("No scam patterns in message", "Language AI", 0);
@@ -757,8 +798,14 @@ img { max-width: 100%; }
     resetRun();
     $("hint").textContent = "Watch Mum's phone: an unknown caller rings.";
     show("mum", "m-call");
-    addSignal("Unknown number calling", "Call screening", 10);
-    addSignal("Caller ID not verified by the network", "Call screening", 15);
+    if (isTrusted(CALLER)) {
+      state.trustedCall = true;
+      addSignal("Caller is on the family's trusted list", "Call screening", 0);
+    } else {
+      state.runNumbers.push(CALLER);
+      addSignal("Unknown number calling", "Call screening", 10);
+      addSignal("Caller ID not verified by the network", "Call screening", 15);
+    }
     later(function () { answerCall(); }, 1800);
   }
   function answerCall() {
@@ -770,8 +817,8 @@ img { max-width: 100%; }
       simSeconds += 20;
       var m = Math.floor(simSeconds / 60), s = simSeconds % 60;
       $("m-timer").textContent = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
-      if (m >= 10 && !flags.long) { flags.long = true; addSignal("Long call with an unverified number (10+ min)", "Call behaviour", 20); }
-      if (m >= 19 && !flags.bank) { flags.bank = true; ctx.bank = true; $("m-bank").hidden = false; addSignal("Banking app opened during the call", "Phone activity", 20); }
+      if (m >= 10 && !flags.long) { flags.long = true; if (state.trustedCall) addSignal("Long call, but with a trusted number", "Call behaviour", 0); else addSignal("Long call with an unverified number (10+ min)", "Call behaviour", 20); }
+      if (m >= 19 && !flags.bank) { flags.bank = true; ctx.bank = true; $("m-bank").hidden = false; addSignal(state.trustedCall ? "Banking app opened during a trusted call" : "Banking app opened during the call", "Phone activity", state.trustedCall ? 0 : 20); }
       if (m >= 24 && !flags.msg) {
         flags.msg = true; clearInterval(iv); ctx.callMinutes = 24;
         deliverMessage("+60 11-2394 8812", "Ini Inspektor Rahman dari PDRM. Akaun anda terlibat dalam siasatan pengubahan wang haram. Jangan beritahu sesiapa, termasuk anak anda. Pindahkan simpanan anda ke akaun selamat hari ini.", false, ctx);
@@ -801,7 +848,7 @@ img { max-width: 100%; }
   }
 
   /* ---------- wiring ---------- */
-  Array.prototype.forEach.call(document.querySelectorAll("#mum .pill"), function (p) {
+  Array.prototype.forEach.call(document.querySelectorAll("#mum .pill, .langbtn"), function (p) {
     p.addEventListener("click", function () { state.lang = p.dataset.lang; applyLang(); });
   });
   $("m-consent").addEventListener("change", function () { $("m-start").disabled = !$("m-consent").checked; });
@@ -813,22 +860,21 @@ img { max-width: 100%; }
   });
 
   $("m-callfam").addEventListener("click", function () {
-    mumOverlay(state.lang === "ms" ? "Menghubungi Aisyah…" : "Calling Aisyah…", state.lang === "ms" ? "Demo: tiada panggilan sebenar dibuat." : "Demo: no real call is made.", null, null, state.lang === "ms" ? "Batal" : "Cancel");
+    mumOverlay(L("Calling Aisyah…", "Menghubungi Aisyah…", "正在打给 Aisyah…"), L("Demo: no real call is made.", "Demo: tiada panggilan sebenar dibuat.", "演示：没有拨出真实电话。"), null, null, L("Cancel", "Batal", "取消"));
     $("f-push").classList.remove("show");
     famOverlay("Mum is calling", "Incoming call from Mum.", "Answer", function () { connected("mum"); }, "Decline");
   });
   $("m-997").addEventListener("click", function () {
-    mumOverlay(state.lang === "ms" ? "Menghubungi NSRC 997…" : "Calling NSRC 997…", state.lang === "ms" ? "National Scam Response Centre. Demo: dalam aplikasi sebenar, ini membuka pendail telefon anda." : "National Scam Response Centre. Demo: in the real app this opens your phone's dialler.", null, null, state.lang === "ms" ? "Tutup" : "Close");
+    mumOverlay(L("Calling NSRC 997…", "Menghubungi NSRC 997…", "正在拨打 NSRC 997…"), L("National Scam Response Centre. Demo: in the real app this opens your phone's dialler.", "National Scam Response Centre. Demo: dalam aplikasi sebenar, ini membuka pendail telefon anda.", "国家诈骗应对中心。演示：在真实应用中，这会打开手机拨号器。"), null, null, L("Close", "Tutup", "关闭"));
     if (state.alertActive) addTimeline("Mum called NSRC 997", true);
     addSignal("Mum chose to call NSRC 997", "Outcome", 0);
   });
   $("m-freeze").addEventListener("click", function () {
-    var ms = state.lang === "ms";
-    mumOverlay(ms ? "Bekukan perbankan dalam talian?" : "Freeze online banking?", ms ? "Ini membuka suis pemutus (kill switch) bank anda. Tiada wang boleh dipindahkan sehingga anda menghubungi bank." : "This opens your bank's kill switch. No money can be moved until you call your bank.", ms ? "Bekukan sekarang" : "Freeze now", function () {
-      mumOverlay(ms ? "Perbankan dalam talian dibekukan" : "Online banking frozen", ms ? "Demo. Hubungi bank anda untuk membukanya semula." : "Demo. Call your bank to unfreeze it.", null, null, ms ? "Selesai" : "Done");
+    mumOverlay(L("Freeze online banking?", "Bekukan perbankan dalam talian?", "冻结网上银行？"), L("This opens your bank's kill switch. No money can be moved until you call your bank.", "Ini membuka suis pemutus (kill switch) bank anda. Tiada wang boleh dipindahkan sehingga anda menghubungi bank.", "这会打开银行的紧急冻结功能（kill switch）。在您联系银行之前，任何钱都无法转出。"), L("Freeze now", "Bekukan sekarang", "立即冻结"), function () {
+      mumOverlay(L("Online banking frozen", "Perbankan dalam talian dibekukan", "网上银行已冻结"), L("Demo. Call your bank to unfreeze it.", "Demo. Hubungi bank anda untuk membukanya semula.", "演示。请联系银行解冻。"), null, null, L("Done", "Selesai", "完成"));
       if (state.alertActive) addTimeline("Mum froze her online banking", true);
       addSignal("Mum froze her online banking", "Outcome", 0);
-    }, ms ? "Batal" : "Cancel");
+    }, L("Cancel", "Batal", "取消"));
   });
   $("m-dismiss").addEventListener("click", function () {
     show("mum", "m-home");
@@ -842,8 +888,7 @@ img { max-width: 100%; }
   $("f-push").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openAlert(); } });
   $("f-callmum").addEventListener("click", function () {
     famOverlay("Calling Mum…", "Demo: no real call is made.", null, null, "Cancel");
-    var ms = state.lang === "ms";
-    mumOverlay(ms ? "Aisyah sedang menelefon" : "Aisyah is calling", ms ? "Panggilan masuk daripada anak anda." : "Incoming call from your daughter.", ms ? "Jawab" : "Answer", function () { connected("aisyah"); }, ms ? "Tolak" : "Decline");
+    mumOverlay(L("Aisyah is calling", "Aisyah sedang menelefon", "Aisyah 来电"), L("Incoming call from your daughter.", "Panggilan masuk daripada anak anda.", "您的女儿打来电话。"), L("Answer", "Jawab", "接听"), function () { connected("aisyah"); }, L("Decline", "Tolak", "拒接"));
   });
   $("f-997").addEventListener("click", function () {
     famOverlay("Calling NSRC 997…", "National Scam Response Centre. Demo: in the real app this opens your dialler.", null, null, "Close");
@@ -855,6 +900,14 @@ img { max-width: 100%; }
     $("f-status").textContent = "Mum is protected";
     addRecent("f-recent", "You marked an alert as a false alarm");
     addSignal("Marked false alarm: used to retrain the model", "Feedback", 0);
+    var added = state.runNumbers.filter(function (n) { return !isTrusted(n); });
+    added.forEach(function (n) { state.trusted.push(n); });
+    renderTrusted();
+    if (added.length) {
+      addSignal("Added to trusted numbers: " + added.join(", "), "Feedback", 0);
+      famOverlay("Marked as a false alarm", "Thanks. " + added.join(" and ") + (added.length > 1 ? " are" : " is") + " now trusted, so Mum will not be warned about " + (added.length > 1 ? "them" : "it") + " again. Run the same scenario to see the difference.", null, null, "OK");
+      $("hint").textContent = "False alarm recorded. Run the same scenario again: the trusted numbers no longer trigger a warning.";
+    }
   });
   $("f-back").addEventListener("click", function () { show("fam", "f-home"); });
   Array.prototype.forEach.call(document.querySelectorAll("#fam .tab"), function (b) {
@@ -867,6 +920,7 @@ img { max-width: 100%; }
   $("sendCustom").addEventListener("click", sendCustom);
   $("reset").addEventListener("click", function () {
     resetRun(); clearSignals();
+    state.trusted = []; renderTrusted();
     $("signals").innerHTML = '<li class="empty">No signals yet. Run a scenario.</li>';
     counts = { calls: 0, msgs: 0, alerts: 0 };
     ["calls", "msgs", "alerts"].forEach(function (k) { $("f-" + k).textContent = "0"; });
