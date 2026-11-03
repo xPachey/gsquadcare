@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Interactive prototype of G-SquadCare, an AI scam shield for older Malaysians and their families.">
+<title>G-SquadCare Demo App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: control panel beside two live phones (older person, adult child); stacks to one column on phones. */
+:root {
+  --bg: #EAEEEC;
+  --surface: #FFFFFF;
+  --ink: #16201F;
+  --muted: #4B5755;
+  --line: #CFD6D3;
+  --accent: #0B5C5C;
+  --accent-ink: #FFFFFF;
+  --danger: #A3261E;
+  --warn: #8A5A00;
+  --good: #1F6B3A;
+  --meter-track: #DDE3E0;
+  --bezel: #1C2322;
+  /* the app inside each phone keeps one light look */
+  --app-bg: #F7F6F2;
+  --app-ink: #1B1F24;
+  --app-muted: #4A5058;
+  --app-line: #E2E1DC;
+  --app-card: #FFFFFF;
+  --app-teal: #0B5C5C;
+  --app-teal-soft: #E6F1F0;
+  --app-teal-deep: #123B3B;
+  --app-red: #A3261E;
+  --app-red-soft: #FCEDEB;
+  --app-amber-soft: #FFF3DC;
+  --app-amber-ink: #5C3F00;
+  --scrim: rgba(16, 22, 21, 0.62);
+  --font-app: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1413; --surface: #162020; --ink: #E5EDEB; --muted: #9DB0AB; --line: #2B3836;
+    --accent: #5CC2B6; --accent-ink: #062A27; --danger: #F08A80; --warn: #E7B65A; --good: #7FD39B;
+    --meter-track: #26312F; --bezel: #050808; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1413; --surface: #162020; --ink: #E5EDEB; --muted: #9DB0AB; --line: #2B3836;
+  --accent: #5CC2B6; --accent-ink: #062A27; --danger: #F08A80; --warn: #E7B65A; --good: #7FD39B;
+  --meter-track: #26312F; --bezel: #050808; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-app); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button, textarea, input { font-family: inherit; }
+button { cursor: pointer; }
+button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.top { padding-block: 22px 8px; }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--accent); }
+.brand h1 { margin: 0; font-size: 24px; letter-spacing: -0.01em; color: var(--ink); text-wrap: balance; }
+.top p { margin: 0; color: var(--muted); font-size: 14px; max-width: 62ch; }
+.stage { display: grid; grid-template-columns: minmax(280px, 330px) auto auto; justify-content: center; align-items: start; gap: 28px; padding-block: 16px 40px; }
+@media (max-width: 1140px) { .stage { grid-template-columns: repeat(2, auto); } .panel { grid-column: 1 / -1; max-width: 760px; width: 100%; justify-self: center; } }
+@media (max-width: 760px) { .stage { grid-template-columns: minmax(0, 1fr); justify-items: center; } .panel { grid-column: auto; } }
+
+/* control panel */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel h2 { margin: 0; font-size: 17px; }
+.panel h3 { margin: 4px 0 0; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.hint { margin: 0; font-size: 14px; color: var(--muted); }
+.scen { display: flex; flex-direction: column; gap: 8px; }
+.scen button { text-align: left; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 48px; font-size: 15px; }
+.scen button:hover { border-color: var(--accent); }
+.scen button strong { display: block; font-size: 15px; }
+.scen button span.sub { display: block; font-size: 13px; color: var(--muted); }
+.chip { flex-shrink: 0; font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1.5px solid currentColor; }
+.chip.high { color: var(--danger); } .chip.med { color: var(--warn); } .chip.low { color: var(--good); }
+.panel label { font-size: 14px; font-weight: 700; }
+.panel textarea { width: 100%; min-height: 84px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.4; }
+.btn { border-radius: 12px; min-height: 44px; padding: 0 16px; font-size: 15px; font-weight: 700; border: 1.5px solid var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; color: var(--accent); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.meter { display: flex; flex-direction: column; gap: 6px; }
+.meter-top { display: flex; justify-content: space-between; align-items: baseline; }
+.meter-score { font-family: var(--font-mono); font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.meter-tier { font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.track { position: relative; height: 12px; border-radius: 6px; background: var(--meter-track); overflow: hidden; }
+.fill { position: absolute; inset: 0 auto 0 0; width: 0%; border-radius: 6px; background: var(--good); transition: width 0.4s ease, background-color 0.4s ease; }
+.ticks { position: relative; height: 16px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.ticks span { position: absolute; transform: translateX(-50%); }
+.signals { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow: auto; }
+.signals li { display: grid; grid-template-columns: 1fr auto; gap: 8px; font-size: 13.5px; padding: 6px 8px; border-radius: 8px; background: var(--bg); }
+.signals li .pts { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--danger); }
+.signals li.note .pts { color: var(--muted); }
+.signals li .kind { display: block; font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.signals .empty { color: var(--muted); background: transparent; display: block; }
+.small { margin: 0; font-size: 12.5px; color: var(--muted); }
+
+/* phones */
+.device { display: flex; flex-direction: column; gap: 10px; align-items: center; min-width: 0; }
+.dlabel { margin: 0; font-size: 14px; color: var(--muted); text-align: center; }
+.dlabel strong { color: var(--ink); }
+.phone { width: min(344px, 100%); aspect-ratio: 344 / 720; max-width: 100%; border: 10px solid var(--bezel); border-radius: 42px; background: var(--bezel); overflow: hidden; position: relative; }
+.screen { position: absolute; inset: 0; border-radius: 32px; overflow: hidden; background: var(--app-bg); color: var(--app-ink); font-family: var(--font-app); }
+.scr { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; padding: 22px 18px 18px; overflow-y: auto; }
+.scr h2 { margin: 0; font-size: 24px; line-height: 1.2; text-wrap: balance; }
+.scr p { margin: 0; }
+.appbar { display: flex; align-items: center; justify-content: space-between; color: var(--app-teal); font-weight: 700; font-size: 15px; }
+.appbar .who { color: var(--app-muted); font-weight: 400; font-size: 13px; }
+.card { background: var(--app-card); border: 1px solid var(--app-line); border-radius: 14px; padding: 13px; display: flex; flex-direction: column; gap: 9px; }
+.li { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; line-height: 1.4; }
+.li svg { flex-shrink: 0; margin-top: 1px; }
+.lab { font-size: 13px; font-weight: 700; color: var(--app-muted); }
+.pills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.pill { height: 42px; border-radius: 10px; border: 1.5px solid #B9BDC2; background: #FFFFFF; color: var(--app-ink); font-size: 15px; }
+.pill[aria-pressed="true"] { background: var(--app-teal); border-color: var(--app-teal); color: #FFFFFF; font-weight: 700; }
+.abtn { min-height: 52px; border-radius: 14px; border: none; background: var(--app-teal); color: #FFFFFF; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; }
+.abtn:disabled { background: #9AA6A4; cursor: not-allowed; }
+.abtn.line { background: #FFFFFF; color: var(--app-ink); border: 2px solid var(--app-ink); }
+.abtn.redline { background: #FFFFFF; color: var(--app-red); border: 2px solid var(--app-red); }
+.abtn.soft { background: #FFFFFF; color: var(--app-muted); border: 1.5px solid #B9BDC2; font-weight: 400; font-size: 15px; min-height: 46px; }
+.textbtn { border: none; background: none; color: var(--app-muted); text-decoration: underline; font-size: 14px; min-height: 44px; }
+.consent { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.consent input { width: 22px; height: 22px; margin: 0; accent-color: var(--app-teal); flex-shrink: 0; }
+.status { display: flex; gap: 12px; align-items: center; background: var(--app-teal-soft); border-radius: 14px; padding: 14px; color: var(--app-teal-deep); }
+.status strong { font-size: 18px; display: block; }
+.status span { font-size: 13.5px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--app-card); border: 1px solid var(--app-line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+.stat b { font-size: 24px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; line-height: 1.3; color: var(--app-muted); }
+.recent { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.recent li { font-size: 13.5px; line-height: 1.35; display: grid; grid-template-columns: 52px 1fr; gap: 8px; }
+.recent li time { color: var(--app-muted); font-variant-numeric: tabular-nums; }
+.recent li.hi span { color: var(--app-red); font-weight: 700; }
+/* incoming call and in-call */
+.callscr { background: #16201F; color: #FFFFFF; align-items: center; text-align: center; justify-content: space-between; padding: 54px 22px 40px; }
+.callscr .num { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.callscr .meta { font-size: 15px; color: #C9D4D1; }
+.vchip { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #5A1F1A; color: #FFD9D4; }
+.shieldline { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: #9FE0D7; }
+.timer { font-family: var(--font-mono); font-size: 40px; font-variant-numeric: tabular-nums; margin-top: 18px; }
+.bankchip { font-size: 13px; padding: 6px 10px; border-radius: 10px; background: #2A3735; color: #FFE2A8; }
+.callbtns { display: flex; gap: 48px; }
+.round { width: 64px; height: 64px; border-radius: 32px; border: none; display: flex; align-items: center; justify-content: center; color: #FFFFFF; }
+.round.ok { background: #1F8A4C; } .round.no { background: #C0392B; }
+/* warning */
+.warn { padding: 0; gap: 0; }
+.warn .band { background: var(--app-red); color: #FFFFFF; padding: 26px 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+.warn .band h2 { font-size: 27px; }
+.warn .band .sub { color: #FFE9E6; font-size: 14.5px; }
+.warn .band .do { font-weight: 700; font-size: 16px; }
+.warn .body { padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 10px; }
+.reason { display: flex; gap: 10px; align-items: flex-start; background: var(--app-card); border: 1px solid var(--app-line); border-radius: 12px; padding: 11px; font-size: 14.5px; line-height: 1.4; }
+.remind { background: var(--app-teal-soft); color: var(--app-teal-deep); border-radius: 12px; padding: 11px 12px; font-size: 14px; }
+.foot { display: flex; gap: 6px; align-items: center; justify-content: center; font-size: 13px; color: var(--app-muted); text-align: center; }
+/* family alert */
+.alertcard { border: 2px solid var(--app-red); }
+.risk { align-self: flex-start; background: var(--app-red); color: #FFFFFF; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; padding: 3px 9px; border-radius: 999px; }
+.dot { width: 7px; height: 7px; border-radius: 4px; background: var(--app-red); margin-top: 7px; flex-shrink: 0; }
+.tl { display: grid; grid-template-columns: 62px 1fr; gap: 6px 8px; font-size: 13.5px; line-height: 1.35; }
+.tl time { color: var(--app-muted); font-variant-numeric: tabular-nums; }
+.privacy { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--app-muted); }
+.tabs { margin-top: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding-top: 4px; }
+.tab { min-height: 44px; border-radius: 12px; border: 1.5px solid var(--app-line); background: var(--app-card); color: var(--app-muted); font-size: 14.5px; }
+.tab[aria-current="page"] { border-color: var(--app-teal); color: var(--app-teal); font-weight: 700; }
+.bars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; align-items: end; height: 92px; }
+.bars div { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: var(--app-muted); }
+.bars i { display: block; width: 100%; border-radius: 5px; background: var(--app-teal); }
+.bars i.zero { background: #D9DBD6; }
+.tipbox { background: var(--app-amber-soft); color: var(--app-amber-ink); border-radius: 12px; padding: 11px 12px; font-size: 13.5px; }
+/* overlays inside phones */
+.notif { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 5; background: #FFFFFF; color: var(--app-ink); border-radius: 16px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.22); transform: translateY(-130%); transition: transform 0.35s ease; display: flex; flex-direction: column; gap: 3px; font-size: 13.5px; }
+.notif.show { transform: translateY(0); }
+.notif .from { font-weight: 700; font-size: 13px; color: var(--app-muted); }
+.notif.push { border-left: 0; }
+.notif.push .from { color: var(--app-red); }
+.sheet { position: absolute; inset: auto 0 0 0; z-index: 6; background: #FFFFFF; color: var(--app-ink); border-radius: 22px 22px 0 0; padding: 18px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 -10px 30px rgba(0,0,0,0.18); transform: translateY(105%); transition: transform 0.35s ease; }
+.sheet.show { transform: translateY(0); }
+.sheet h3 { margin: 0; font-size: 19px; color: var(--app-amber-ink); }
+.ovl { position: absolute; inset: 0; z-index: 8; background: var(--scrim); display: flex; align-items: center; justify-content: center; padding: 18px; }
+.ovl .box { background: #FFFFFF; color: var(--app-ink); border-radius: 18px; padding: 18px; width: 100%; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.ovl .box h3 { margin: 0; font-size: 20px; }
+.ovl .box p { margin: 0; font-size: 14px; color: var(--app-muted); }
+.pulse { width: 56px; height: 56px; border-radius: 28px; margin: 0 auto; background: var(--app-teal-soft); color: var(--app-teal); display: flex; align-items: center; justify-content: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .pulse { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+}
+@media (prefers-reduced-motion: reduce) { .fill, .notif, .sheet { transition: none; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* standalone page basics */
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg>
+      <h1>G-SquadCare</h1>
+    </div>
+    <p>Interactive prototype of the scam shield. Pick a scenario and watch both phones react. Scams, people and numbers are simulated; no real calls or messages are sent.</p>
+  </div>
+</header>
+
+<main class="wrap stage">
+  <section class="panel" aria-label="Demo controls">
+    <h2>Try a scenario</h2>
+    <p class="hint" id="hint">Finish set-up on Mum's phone first, or pick a scenario to skip it.</p>
+    <div class="scen">
+      <button type="button" id="sc-police"><span><strong>Fake police call and message</strong><span class="sub">The classic "Macau scam", in Bahasa Malaysia</span></span><span class="chip high">High</span></button>
+      <button type="button" id="sc-invest"><span><strong>Investment scam message</strong><span class="sub">"Guaranteed returns", from an unknown number</span></span><span class="chip med">Medium</span></button>
+      <button type="button" id="sc-clinic"><span><strong>Clinic appointment reminder</strong><span class="sub">A normal message from a saved contact</span></span><span class="chip low">Low</span></button>
+    </div>
+
+    <h3>Test your own message</h3>
+    <label for="custom">Message Mum receives from an unknown number</label>
+    <textarea id="custom">Your parcel is held by customs. Pay RM8.50 today at bit.ly/kastam-my or legal action will be taken.</textarea>
+    <div class="row">
+      <button type="button" class="btn primary" id="sendCustom">Send to Mum's phone</button>
+      <button type="button" class="btn ghost" id="reset">Reset demo</button>
+    </div>
+
+    <h3>What the AI sees</h3>
+    <div class="meter" aria-live="polite">
+      <div class="meter-top">
+        <span class="meter-score" id="score">0</span>
+        <span class="meter-tier" id="tier" style="color: var(--good)">Low risk</span>
+      </div>
+      <div class="track" role="img" aria-label="Risk score meter"><div class="fill" id="fill"></div></div>
+      <div class="ticks" aria-hidden="true"><span style="left: 0%; transform: none">0</span><span style="left: 40%">40 tip</span><span style="left: 70%">70 alert</span><span style="left: 100%; transform: translateX(-100%)">100</span></div>
+    </div>
+    <ul class="signals" id="signals"><li class="empty">No signals yet. Run a scenario.</li></ul>
+    <p class="small">Simulated AI: this demo scores messages with keyword patterns in English and Bahasa Malaysia (it also catches spaced-out words). The real product uses a trained multilingual language model running on the phone, as described in Chapter 2.</p>
+  </section>
+
+  <section class="device" aria-label="Mum's phone">
+    <p class="dlabel"><strong>Mum's phone</strong> · Puan Rosnah, 68, Penang</p>
+    <div class="phone">
+      <div class="screen" id="mum">
+
+        <!-- set-up -->
+        <div class="scr" id="m-setup">
+          <div class="appbar"><span>G-SquadCare</span><span class="who">Step 3 of 3</span></div>
+          <h2 data-t="setupTitle">Before we protect you</h2>
+          <p data-t="setupIntro" style="font-size: 15px; color: var(--app-muted)">Here is exactly what G-SquadCare does on this phone.</p>
+          <div class="pills" role="group" aria-label="Language">
+            <button type="button" class="pill" data-lang="en" aria-pressed="true">English</button>
+            <button type="button" class="pill" data-lang="ms" aria-pressed="false">Bahasa Melayu</button>
+          </div>
+          <div class="card">
+            <span class="lab" data-t="checks">What it checks</span>
+            <div class="li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B5C5C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg><span data-t="check1">Who is calling you, and how long the call lasts</span></div>
+            <div class="li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B5C5C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg><span data-t="check2">The words in messages from unknown senders</span></div>
+            <div class="li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B5C5C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg><span data-t="check3">Whether your banking app opens during a call</span></div>
+          </div>
+          <div class="card">
+            <span class="lab" data-t="never">What it never does</span>
+            <div class="li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A3261E" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg><span data-t="never1">Record or listen to your calls</span></div>
+            <div class="li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A3261E" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg><span data-t="never2">Show your messages to anyone, even family</span></div>
+          </div>
+          <div class="consent"><input type="checkbox" id="m-consent"><label for="m-consent" data-t="consent">I understand and agree. Aisyah (my daughter) will be alerted if a scam is likely.</label></div>
+          <button type="button" class="abtn" id="m-start" disabled data-t="start">Turn on protection</button>
+        </div>
+
+        <!-- home -->
+        <div class="scr" id="m-home" hidden>
+          <div class="appbar"><span>G-SquadCare</span><span class="who" data-t="today">Today</span></div>
+          <div class="status">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg>
+            <div><strong data-t="on">Protection is on</strong><span data-t="onSub">Checking calls and messages from unknown numbers.</span></div>
+          </div>
+          <div class="card">
+            <span class="lab" data-t="recent">Recent checks</span>
+            <ul class="recent" id="m-recent"></ul>
+          </div>
+          <div class="card" style="margin-top: auto">
+            <span class="lab" data-t="family">Your family</span>
+            <div class="li" style="align-items: center"><span style="width: 36px; height: 36px; border-radius: 18px; background: #0B5C5C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0">AR</span><span><strong>Aisyah</strong><br><span style="color: var(--app-muted); font-size: 13px" data-t="familySub">Alerted if a scam is likely</span></span></div>
+          </div>
+        </div>
+
+        <!-- incoming call -->
+        <div class="scr callscr" id="m-call" hidden>
+          <div>
+            <div class="meta" data-t="incoming">Incoming call</div>
+            <div class="num" id="m-callnum">+60 3-7621 0458</div>
+            <div class="meta" data-t="unknown">Unknown number</div>
+            <span class="vchip" data-t="notVerified">Not verified</span>
+          </div>
+          <span class="shieldline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"></path></svg><span data-t="watching">G-SquadCare is watching this call's details</span></span>
+          <div class="callbtns">
+            <button type="button" class="round no" id="m-decline" aria-label="Decline call"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+            <button type="button" class="round ok" id="m-answer" aria-label="Answer call"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"></path></svg></button>
+          </div>
+        </div>
+
+        <!-- in call -->
+        <div class="scr callscr" id="m-incall" hidden>
+          <div>
+            <div class="num">+60 3-7621 0458</div>
+            <div class="meta" data-t="unknown">Unknown number</div>
+            <div class="timer" id="m-timer">00:00</div>
+            <div class="meta" style="font-size: 12.5px" data-t="speed">Demo plays call time at 200× speed</div>
+          </div>
+          <span class="bankchip" id="m-bank" hidden data-t="bankOpened">Banking app opened during call</span>
+          <span class="shieldline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"></path></svg><span data-t="protOn">Protection on · call is not recorded</span></span>
+        </div>
+
+        <!-- warning -->
+        <div class="scr warn" id="m-warn" hidden>
+          <div class="band">
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"></path><path d="M12 8v5"></path><path d="M12 16.5v.5"></path></svg>
+            <h2 data-t="warnTitle">Pause. This may be a scam.</h2>
+            <span class="sub" data-t="warnSub">Berhenti sebentar. Ini mungkin penipuan.</span>
+            <span class="do" data-t="warnDo">Do not send money or share any codes yet.</span>
+          </div>
+          <div class="body">
+            <span class="lab" data-t="why">Why we are warning you</span>
+            <div id="m-reasons" style="display: flex; flex-direction: column; gap: 8px"></div>
+            <div class="remind" data-t="remind">Real police and banks will never ask you to move money or keep a call secret.</div>
+            <button type="button" class="abtn" id="m-callfam"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"></path></svg><span data-t="callFam">Call Aisyah now</span></button>
+            <button type="button" class="abtn line" id="m-997" data-t="call997">Call NSRC 997</button>
+            <button type="button" class="abtn redline" id="m-freeze" data-t="freeze">Freeze my bank account</button>
+            <div class="foot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B5C5C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg><span data-t="alerted">Aisyah has been alerted and may call you.</span></div>
+            <button type="button" class="textbtn" id="m-dismiss" data-t="dismiss">I know this caller. Dismiss</button>
+          </div>
+        </div>
+
+        <!-- message notification -->
+        <div class="notif" id="m-notif" aria-live="polite">
+          <span class="from" id="m-notif-from">+60 11-2394 8812</span>
+          <span id="m-notif-text"></span>
+        </div>
+
+        <!-- medium-risk sheet -->
+        <div class="sheet" id="m-sheet" aria-hidden="true">
+          <h3 data-t="tipTitle">This message has some warning signs</h3>
+          <p id="m-tiptext" style="font-size: 14.5px; line-height: 1.4"></p>
+          <button type="button" class="abtn" id="m-tipok" data-t="tipOk">OK, I'll be careful</button>
+          <button type="button" class="abtn soft" id="m-tipdel" data-t="tipDel">Delete this message</button>
+        </div>
+
+        <!-- overlay -->
+        <div class="ovl" id="m-ovl" hidden>
+          <div class="box">
+            <div class="pulse" id="m-ovl-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"></path></svg></div>
+            <h3 id="m-ovl-title">Calling</h3>
+            <p id="m-ovl-text"></p>
+            <button type="button" class="abtn" id="m-ovl-a" hidden>OK</button>
+            <button type="button" class="abtn soft" id="m-ovl-b">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="device" aria-label="Aisyah's phone">
+    <p class="dlabel"><strong>Aisyah's phone</strong> · daughter, works in Kuala Lumpur</p>
+    <div class="phone">
+      <div class="screen" id="fam">
+
+        <!-- family home -->
+        <div class="scr" id="f-home">
+          <div class="appbar"><span>G-SquadCare Family</span><span class="who">Aisyah</span></div>
+          <div class="status">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg>
+            <div><strong id="f-status">Mum is protected</strong><span id="f-statussub">Waiting for Mum to finish set-up</span></div>
+          </div>
+          <span class="lab">Today</span>
+          <div class="stats">
+            <div class="stat"><b id="f-calls">0</b><span>suspicious calls</span></div>
+            <div class="stat"><b id="f-msgs">0</b><span>suspicious messages</span></div>
+            <div class="stat"><b id="f-alerts">0</b><span>high-risk alerts</span></div>
+          </div>
+          <div class="card">
+            <span class="lab">Activity</span>
+            <ul class="recent" id="f-recent"><li><time></time><span style="color: var(--app-muted)">Nothing yet today.</span></li></ul>
+          </div>
+          <div class="privacy"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 018 0v3"></path></svg><span>You see warning signs only. Mum's calls and messages stay private on her phone.</span></div>
+          <div class="tabs"><button type="button" class="tab" aria-current="page" data-go="f-home">Home</button><button type="button" class="tab" data-go="f-weekly">This week</button></div>
+        </div>
+
+        <!-- family weekly -->
+        <div class="scr" id="f-weekly" hidden>
+          <div class="appbar"><span>G-SquadCare Family</span><span class="who">Sample week</span></div>
+          <h2>Mum's week</h2>
+          <p style="font-size: 13.5px; color: var(--app-muted)">Mon 19 – Sun 25 October · sample data</p>
+          <div class="stats">
+            <div class="stat"><b>6</b><span>suspicious calls</span></div>
+            <div class="stat"><b>3</b><span>scam messages</span></div>
+            <div class="stat"><b>0</b><span>money lost</span></div>
+          </div>
+          <div class="card">
+            <span class="lab">Suspicious calls by day</span>
+            <div class="bars" aria-label="Suspicious calls by day: Monday 1, Tuesday 0, Wednesday 2, Thursday 1, Friday 0, Saturday 2, Sunday 0" role="img">
+              <div><span>1</span><i style="height: 26px"></i>Mon</div>
+              <div><span>0</span><i class="zero" style="height: 4px"></i>Tue</div>
+              <div><span>2</span><i style="height: 52px"></i>Wed</div>
+              <div><span>1</span><i style="height: 26px"></i>Thu</div>
+              <div><span>0</span><i class="zero" style="height: 4px"></i>Fri</div>
+              <div><span>2</span><i style="height: 52px"></i>Sat</div>
+              <div><span>0</span><i class="zero" style="height: 4px"></i>Sun</div>
+            </div>
+            <p style="font-size: 13.5px">Most came from overseas numbers between 10 am and 1 pm.</p>
+          </div>
+          <div class="tipbox"><strong>Talk to Mum this week.</strong> Remind her that no bank or police officer will ever ask her to move money to a "safe account".</div>
+          <div class="tabs"><button type="button" class="tab" data-go="f-home">Home</button><button type="button" class="tab" aria-current="page" data-go="f-weekly">This week</button></div>
+        </div>
+
+        <!-- family alert -->
+        <div class="scr" id="f-alert" hidden>
+          <div class="appbar"><span>G-SquadCare Family</span><span class="who">Aisyah</span></div>
+          <div class="card alertcard">
+            <div style="display: flex; justify-content: space-between; align-items: center"><span class="risk">HIGH RISK</span><span style="font-size: 13px; color: var(--app-muted)" id="f-alerttime">Today</span></div>
+            <h2 style="font-size: 21px">Mum may be talking to a scammer right now</h2>
+            <div id="f-reasons" style="display: flex; flex-direction: column; gap: 6px"></div>
+            <button type="button" class="abtn" id="f-callmum"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"></path></svg>Call Mum now</button>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+              <button type="button" class="abtn line" id="f-997" style="font-size: 14.5px; min-height: 46px">Call NSRC 997</button>
+              <button type="button" class="abtn soft" id="f-false">False alarm</button>
+            </div>
+          </div>
+          <div class="card">
+            <span class="lab">What has happened</span>
+            <div class="tl" id="f-timeline"></div>
+          </div>
+          <div class="privacy"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 018 0v3"></path></svg><span>You see warning signs only, never Mum's messages or calls.</span></div>
+          <button type="button" class="textbtn" id="f-back" style="margin-top: auto">Back to home</button>
+        </div>
+
+        <!-- push notification -->
+        <div class="notif push" id="f-push" role="button" tabindex="0" aria-live="assertive">
+          <span class="from">G-SquadCare · High risk</span>
+          <span>Mum may be talking to a scammer. Tap to see why.</span>
+        </div>
+
+        <!-- overlay -->
+        <div class="ovl" id="f-ovl" hidden>
+          <div class="box">
+            <div class="pulse"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"></path></svg></div>
+            <h3 id="f-ovl-title">Calling</h3>
+            <p id="f-ovl-text"></p>
+            <button type="button" class="abtn" id="f-ovl-a" hidden>Answer</button>
+            <button type="button" class="abtn soft" id="f-ovl-b">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- text for Mum's phone ---------- */
+  var T = {
+    en: {
+      setupTitle: "Before we protect you", setupIntro: "Here is exactly what G-SquadCare does on this phone.",
+      checks: "What it checks", check1: "Who is calling you, and how long the call lasts", check2: "The words in messages from unknown senders", check3: "Whether your banking app opens during a call",
+      never: "What it never does", never1: "Record or listen to your calls", never2: "Show your messages to anyone, even family",
+      consent: "I understand and agree. Aisyah (my daughter) will be alerted if a scam is likely.", start: "Turn on protection",
+      today: "Today", on: "Protection is on", onSub: "Checking calls and messages from unknown numbers.", recent: "Recent checks", family: "Your family", familySub: "Alerted if a scam is likely",
+      incoming: "Incoming call", unknown: "Unknown number", notVerified: "Not verified", watching: "G-SquadCare is watching this call's details",
+      speed: "Demo plays call time at 200× speed", bankOpened: "Banking app opened during call", protOn: "Protection on · call is not recorded",
+      warnTitle: "Pause. This may be a scam.", warnSub: "Berhenti sebentar. Ini mungkin penipuan.", warnDo: "Do not send money or share any codes yet.",
+      why: "Why we are warning you", remind: "Real police and banks will never ask you to move money or keep a call secret.",
+      callFam: "Call Aisyah now", call997: "Call NSRC 997", freeze: "Freeze my bank account", alerted: "Aisyah has been alerted and may call you.", dismiss: "I know this caller. Dismiss",
+      tipTitle: "This message has some warning signs", tipOk: "OK, I'll be careful", tipDel: "Delete this message",
+      rCall: function (m) { return "You have been on a call for " + m + " minutes with a number that could not be verified."; },
+      rBank: "Your banking app was opened during this call.",
+      rMsg: function (parts) { return "A new message " + joinList(parts, "and") + "."; },
+      tip: function (parts) { return "It " + joinList(parts, "and") + ". Check with your family before you reply or pay."; },
+      parts: { authority: "claims to be from the police or a government office", fear: "says you are in trouble or under investigation", urgency: "pushes you to act now", secrecy: "asks you to keep it secret", money: "asks you to move money or share a code", toogood: "promises guaranteed returns", link: "contains a link" },
+      recCall: "Call from unknown number checked", recMsgOk: "Message checked: no warning signs", recMsgMed: "Message with warning signs", recMsgHi: "Scam warning shown", recDeclined: "Unknown call declined"
+    },
+    ms: {
+      setupTitle: "Sebelum kami melindungi anda", setupIntro: "Inilah yang G-SquadCare lakukan pada telefon ini.",
+      checks: "Apa yang disemak", check1: "Siapa yang menelefon anda, dan berapa lama panggilan itu", check2: "Perkataan dalam mesej daripada pengirim tidak dikenali", check3: "Sama ada aplikasi bank anda dibuka semasa panggilan",
+      never: "Apa yang tidak sesekali dilakukan", never1: "Merakam atau mendengar panggilan anda", never2: "Menunjukkan mesej anda kepada sesiapa, termasuk keluarga",
+      consent: "Saya faham dan setuju. Aisyah (anak saya) akan dimaklumkan jika ada kemungkinan penipuan.", start: "Hidupkan perlindungan",
+      today: "Hari ini", on: "Perlindungan aktif", onSub: "Menyemak panggilan dan mesej daripada nombor tidak dikenali.", recent: "Semakan terkini", family: "Keluarga anda", familySub: "Dimaklumkan jika ada kemungkinan penipuan",
+      incoming: "Panggilan masuk", unknown: "Nombor tidak dikenali", notVerified: "Tidak disahkan", watching: "G-SquadCare memantau butiran panggilan ini",
+      speed: "Demo memainkan masa panggilan 200× lebih laju", bankOpened: "Aplikasi bank dibuka semasa panggilan", protOn: "Perlindungan aktif · panggilan tidak dirakam",
+      warnTitle: "Berhenti. Ini mungkin penipuan.", warnSub: "Pause. This may be a scam.", warnDo: "Jangan hantar wang atau kongsi sebarang kod dahulu.",
+      why: "Mengapa kami memberi amaran", remind: "Polis dan bank sebenar tidak akan meminta anda memindahkan wang atau merahsiakan panggilan.",
+      callFam: "Hubungi Aisyah sekarang", call997: "Hubungi NSRC 997", freeze: "Bekukan akaun bank saya", alerted: "Aisyah telah dimaklumkan dan mungkin menghubungi anda.", dismiss: "Saya kenal pemanggil ini. Tutup",
+      tipTitle: "Mesej ini ada tanda amaran", tipOk: "Baik, saya akan berhati-hati", tipDel: "Padam mesej ini",
+      rCall: function (m) { return "Anda telah berada dalam panggilan selama " + m + " minit dengan nombor yang tidak dapat disahkan."; },
+      rBank: "Aplikasi bank anda dibuka semasa panggilan ini.",
+      rMsg: function (parts) { return "Mesej baharu " + joinList(parts, "dan") + "."; },
+      tip: function (parts) { return "Ia " + joinList(parts, "dan") + ". Semak dengan keluarga sebelum membalas atau membayar."; },
+      parts: { authority: "mendakwa daripada polis atau pejabat kerajaan", fear: "mengatakan anda dalam masalah atau sedang disiasat", urgency: "mendesak anda bertindak segera", secrecy: "meminta anda merahsiakannya", money: "meminta anda memindahkan wang atau berkongsi kod", toogood: "menjanjikan pulangan terjamin", link: "mengandungi pautan" },
+      recCall: "Panggilan nombor tidak dikenali disemak", recMsgOk: "Mesej disemak: tiada tanda amaran", recMsgMed: "Mesej dengan tanda amaran", recMsgHi: "Amaran penipuan ditunjukkan", recDeclined: "Panggilan tidak dikenali ditolak"
+    }
+  };
+  var FAM_PARTS = { authority: "claims to be police or a government office", fear: "says she is in trouble or under investigation", urgency: "pushes her to act now", secrecy: "asks her to keep it secret", money: "asks her to move money or share a code", toogood: "promises guaranteed returns", link: "contains a link" };
+
+  function joinList(a, word) {
+    if (a.length <= 1) return a.join("");
+    return a.slice(0, -1).join(", ") + " " + word + " " + a[a.length - 1];
+  }
+
+  /* ---------- simulated AI ---------- */
+  var CATS = [
+    { key: "authority", label: "Claims authority", pts: 10, words: ["police", "polis", "pdrm", "inspector", "inspektor", "officer", "pegawai", "bank negara", "lhdn", "court", "mahkamah", "customs", "kastam", "mcmc", "sprm", "macc", "government", "kerajaan"] },
+    { key: "fear", label: "Threat or fear", pts: 10, words: ["investigation", "siasatan", "disiasat", "money laundering", "pengubahan wang haram", "arrest", "ditangkap", "tangkap", "warrant", "waran", "legal action", "tindakan undang", "suspended", "disekat", "frozen", "dibekukan", "case", "kes jenayah", "terlibat"] },
+    { key: "urgency", label: "Urgency", pts: 5, words: ["today", "hari ini", "immediately", "segera", "right now", "sekarang", "urgent", "within 24 hours", "cepat"] },
+    { key: "secrecy", label: "Asks for secrecy", pts: 15, words: ["don't tell", "dont tell", "do not tell", "jangan beritahu", "jangan bagitahu", "keep this between us", "keep it secret", "secret", "rahsia", "confidential", "sulit"] },
+    { key: "money", label: "Money or code request", pts: 15, words: ["transfer", "pindahkan", "safe account", "akaun selamat", "tac", "otp", "pin number", "deposit", "pay rm", "bayar", "send money", "hantar wang", "simpanan"] },
+    { key: "toogood", label: "Too good to be true", pts: 15, words: ["guaranteed", "dijamin", "returns", "pulangan", "profit", "untung", "vip investment", "pelaburan"] },
+    { key: "link", label: "Contains a link", pts: 10, words: ["http", "www.", "bit.ly", ".link", "tinyurl"] }
+  ];
+
+  function analyseText(text) {
+    var low = " " + text.toLowerCase().replace(/[’]/g, "'") + " ";
+    var squashed = low.replace(/[\s.\-_*]+/g, "");
+    var found = [];
+    CATS.forEach(function (c) {
+      var hit = c.words.some(function (w) {
+        if (c.key === "link") return low.indexOf(w) !== -1;
+        if (w.length <= 3) return new RegExp("\\b" + w + "\\b").test(low);
+        return low.indexOf(w) !== -1 || squashed.indexOf(w.replace(/[\s.\-]+/g, "")) !== -1;
+      });
+      if (hit) found.push(c);
+    });
+    return found;
+  }
+
+  /* ---------- state ---------- */
+  var state = { lang: "en", setup: false, score: 0, timers: [], call: null, alertActive: false };
+  var counts = { calls: 0, msgs: 0, alerts: 0 };
+
+  function later(fn, ms) { var id = setTimeout(fn, ms); state.timers.push(id); return id; }
+  function clearTimers() { state.timers.forEach(function (id) { clearTimeout(id); clearInterval(id); }); state.timers = []; }
+  function now() {
+    var d = new Date(); var h = d.getHours(); var m = d.getMinutes();
+    var ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12;
+    return h + ":" + (m < 10 ? "0" : "") + m + " " + ap;
+  }
+  function t(key) { return T[state.lang][key]; }
+
+  function show(phone, id) {
+    var root = $(phone);
+    Array.prototype.forEach.call(root.querySelectorAll(":scope > .scr"), function (s) { s.hidden = s.id !== id; });
+    if (phone === "fam") {
+      Array.prototype.forEach.call(root.querySelectorAll(".tab"), function (b) {
+        if (b.dataset.go === id) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+      });
+    }
+  }
+
+  function applyLang() {
+    Array.prototype.forEach.call(document.querySelectorAll("#mum [data-t]"), function (el) {
+      var v = t(el.dataset.t); if (typeof v === "string") el.textContent = v;
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("#mum .pill"), function (p) {
+      p.setAttribute("aria-pressed", p.dataset.lang === state.lang ? "true" : "false");
+    });
+  }
+
+  /* ---------- AI panel ---------- */
+  function setScore(s) {
+    state.score = Math.min(100, s);
+    $("score").textContent = state.score;
+    var fill = $("fill"); fill.style.width = state.score + "%";
+    var tier = $("tier");
+    if (state.score >= 70) { tier.textContent = "High risk: alert family"; tier.style.color = "var(--danger)"; fill.style.background = "var(--danger)"; }
+    else if (state.score >= 40) { tier.textContent = "Medium risk: show a tip"; tier.style.color = "var(--warn)"; fill.style.background = "var(--warn)"; }
+    else { tier.textContent = "Low risk"; tier.style.color = "var(--good)"; fill.style.background = "var(--good)"; }
+  }
+  function addSignal(label, kind, pts) {
+    var ul = $("signals");
+    var empty = ul.querySelector(".empty"); if (empty) empty.remove();
+    var li = document.createElement("li");
+    if (!pts) li.className = "note";
+    var a = document.createElement("span");
+    var k = document.createElement("span"); k.className = "kind"; k.textContent = kind;
+    a.appendChild(k); a.appendChild(document.createTextNode(label));
+    var b = document.createElement("span"); b.className = "pts"; b.textContent = pts ? "+" + pts : "";
+    li.appendChild(a); li.appendChild(b);
+    ul.appendChild(li); ul.scrollTop = ul.scrollHeight;
+    if (pts) setScore(state.score + pts);
+  }
+  function clearSignals() { $("signals").innerHTML = ""; setScore(0); }
+
+  /* ---------- lists ---------- */
+  function addRecent(listId, text, hi) {
+    var ul = $(listId);
+    var placeholder = ul.querySelector("li > span[style]"); if (placeholder && listId === "f-recent") ul.innerHTML = "";
+    var li = document.createElement("li"); if (hi) li.className = "hi";
+    var tm = document.createElement("time"); tm.textContent = now();
+    var sp = document.createElement("span"); sp.textContent = text;
+    li.appendChild(tm); li.appendChild(sp);
+    ul.insertBefore(li, ul.firstChild);
+    while (ul.children.length > 5) ul.removeChild(ul.lastChild);
+  }
+  function bump(key) { counts[key] += 1; $("f-" + key).textContent = counts[key]; }
+  function addTimeline(text, strong) {
+    var tl = $("f-timeline");
+    var tm = document.createElement("time"); tm.textContent = now();
+    var sp = document.createElement("span"); sp.textContent = text; if (strong) sp.style.fontWeight = "700";
+    tl.appendChild(tm); tl.appendChild(sp);
+  }
+
+  /* ---------- overlays ---------- */
+  function hideAllOverlays() {
+    $("m-ovl").hidden = true; $("f-ovl").hidden = true;
+    $("m-notif").classList.remove("show"); $("f-push").classList.remove("show");
+    $("m-sheet").classList.remove("show"); $("m-sheet").setAttribute("aria-hidden", "true");
+  }
+  function mumOverlay(title, text, aLabel, aFn, bLabel, bFn) {
+    $("m-ovl-title").textContent = title; $("m-ovl-text").textContent = text;
+    var a = $("m-ovl-a"); a.hidden = !aLabel; a.textContent = aLabel || ""; a.onclick = aFn || null;
+    var b = $("m-ovl-b"); b.textContent = bLabel || "Close"; b.onclick = bFn || function () { $("m-ovl").hidden = true; };
+    $("m-ovl").hidden = false;
+  }
+  function famOverlay(title, text, aLabel, aFn, bLabel, bFn) {
+    $("f-ovl-title").textContent = title; $("f-ovl-text").textContent = text;
+    var a = $("f-ovl-a"); a.hidden = !aLabel; a.textContent = aLabel || ""; a.onclick = aFn || null;
+    var b = $("f-ovl-b"); b.textContent = bLabel || "Close"; b.onclick = bFn || function () { $("f-ovl").hidden = true; };
+    $("f-ovl").hidden = false;
+  }
+  function connected(who) {
+    var end = function () { $("m-ovl").hidden = true; $("f-ovl").hidden = true; afterCall(); };
+    mumOverlay(state.lang === "ms" ? "Disambungkan dengan Aisyah" : "Connected to Aisyah", state.lang === "ms" ? "Demo: tiada panggilan sebenar dibuat." : "Demo: no real call is made.", null, null, state.lang === "ms" ? "Tamat" : "End call", end);
+    famOverlay("Connected to Mum", "Demo: no real call is made.", null, null, "End call", end);
+    if (state.alertActive) addTimeline(who === "mum" ? "Mum called you" : "You called Mum", true);
+  }
+  function afterCall() {
+    if (state.alertActive) { state.alertActive = false; addTimeline("Call ended. Scam stopped.", true); }
+    show("mum", "m-home");
+    $("f-status").textContent = "Mum is safe";
+    addRecent("f-recent", "You spoke with Mum after the alert");
+    addSignal("Family spoke during the scam", "Outcome", 0);
+  }
+
+  /* ---------- core flows ---------- */
+  function completeSetup() {
+    state.setup = true;
+    $("m-consent").checked = true;
+    show("mum", "m-home");
+    $("f-statussub").textContent = "Protection turned on just now";
+    $("hint").textContent = "Mum is protected. Pick a scenario.";
+    if (!$("m-recent").children.length) addRecent("m-recent", t("on"));
+  }
+
+  function resetRun() {
+    clearTimers(); hideAllOverlays(); clearSignals();
+    state.call = null; state.alertActive = false;
+    $("m-bank").hidden = true; $("m-timer").textContent = "00:00";
+    if (state.setup) show("mum", "m-home");
+    show("fam", "f-home");
+  }
+
+  function deliverMessage(from, text, known, extra) {
+    $("m-notif-from").textContent = from;
+    $("m-notif-text").textContent = text;
+    $("m-notif").classList.add("show");
+    addSignal("Message arrives from " + (known ? "a saved contact" : "an unknown sender"), "Message", known ? 0 : 10);
+    later(function () {
+      var found = analyseText(text);
+      if (known) {
+        addSignal(found.length ? "Saved contact: patterns weighed lower" : "No scam patterns in message", "Language AI", 0);
+        found.forEach(function (c) { addSignal(c.label, "Language AI", Math.round(c.pts / 3)); });
+      } else if (!found.length) {
+        addSignal("No scam patterns in message", "Language AI", 0);
+      } else {
+        found.forEach(function (c) { addSignal(c.label, "Language AI", c.pts); });
+      }
+      decide(found, extra || {});
+    }, 1100);
+  }
+
+  function decide(found, ctx) {
+    var keys = found.map(function (c) { return c.key; });
+    later(function () { $("m-notif").classList.remove("show"); }, state.score >= 40 ? 400 : 2600);
+    if (state.score >= 70) return highRisk(keys, ctx);
+    if (state.score >= 40) return mediumRisk(keys);
+    addRecent("m-recent", t("recMsgOk"));
+    addSignal("No warning shown: normal message", "Decision", 0);
+  }
+
+  function mediumRisk(keys) {
+    var parts = keys.filter(function (k) { return k !== "link" || keys.length === 1; }).map(function (k) { return t("parts")[k]; });
+    if (!parts.length) parts = [t("parts").link];
+    $("m-tiptext").textContent = t("tip")(parts);
+    later(function () { $("m-sheet").classList.add("show"); $("m-sheet").setAttribute("aria-hidden", "false"); }, 450);
+    addRecent("m-recent", t("recMsgMed"));
+    bump("msgs");
+    addRecent("f-recent", "Suspicious message flagged. Mum saw a tip; no alert needed.");
+    addSignal("Tip shown to Mum; family sees it in Activity", "Decision", 0);
+  }
+
+  function highRisk(keys, ctx) {
+    state.alertActive = true;
+    if (state.call) { clearInterval(state.call.interval); }
+    var reasons = $("m-reasons"); reasons.innerHTML = "";
+    var famReasons = [];
+    function reason(text) {
+      var d = document.createElement("div"); d.className = "reason";
+      d.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A3261E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v6"></path><path d="M12 16.5v.5"></path></svg>';
+      var s = document.createElement("span"); s.textContent = text; d.appendChild(s); reasons.appendChild(d);
+    }
+    if (ctx.callMinutes) { reason(t("rCall")(ctx.callMinutes)); famReasons.push("On a " + ctx.callMinutes + "-minute call with an unverified number"); }
+    if (ctx.bank) { reason(t("rBank")); famReasons.push("Her banking app was opened during the call"); }
+    var parts = keys.filter(function (k) { return k !== "urgency" || keys.length < 4; }).map(function (k) { return t("parts")[k]; });
+    var fparts = keys.filter(function (k) { return k !== "urgency" || keys.length < 4; }).map(function (k) { return FAM_PARTS[k]; });
+    if (parts.length) { reason(t("rMsg")(parts)); famReasons.push("Received a message that " + joinList(fparts, "and")); }
+
+    later(function () { show("mum", "m-warn"); addRecent("m-recent", t("recMsgHi"), true); }, 500);
+    addSignal("Warning screen shown on Mum's phone", "Decision", 0);
+    addSignal("Alert sent to Aisyah: risk, reasons and time only", "Decision", 0);
+
+    var fr = $("f-reasons"); fr.innerHTML = "";
+    famReasons.forEach(function (r) {
+      var row = document.createElement("div"); row.className = "li";
+      var dot = document.createElement("span"); dot.className = "dot";
+      var s = document.createElement("span"); s.textContent = r;
+      row.appendChild(dot); row.appendChild(s); fr.appendChild(row);
+    });
+    $("f-alerttime").textContent = "Today, " + now();
+    var tl = $("f-timeline"); tl.innerHTML = "";
+    if (ctx.callMinutes) addTimeline("Call from unverified number in progress");
+    if (ctx.bank) addTimeline("Banking app opened during call");
+    if (parts.length) addTimeline("Scam-pattern message received");
+    addTimeline("Mum sees the warning; you are alerted", true);
+
+    later(function () {
+      $("f-push").classList.add("show");
+      bump("alerts"); if (ctx.callMinutes) bump("calls"); if (parts.length) bump("msgs");
+      addRecent("f-recent", "High-risk alert: possible scam in progress", true);
+      $("f-status").textContent = "Mum may be in danger";
+    }, 900);
+    later(function () { openAlert(); }, 3200);
+  }
+
+  function openAlert() {
+    $("f-push").classList.remove("show");
+    show("fam", "f-alert");
+  }
+
+  /* ---------- scenarios ---------- */
+  function scenarioPolice() {
+    if (!state.setup) completeSetup();
+    resetRun();
+    $("hint").textContent = "Watch Mum's phone: an unknown caller rings.";
+    show("mum", "m-call");
+    addSignal("Unknown number calling", "Call screening", 10);
+    addSignal("Caller ID not verified by the network", "Call screening", 15);
+    later(function () { answerCall(); }, 1800);
+  }
+  function answerCall() {
+    show("mum", "m-incall");
+    addRecent("m-recent", t("recCall"));
+    var simSeconds = 0; var ctx = { callMinutes: 0, bank: false };
+    var flags = { long: false, bank: false, msg: false };
+    var iv = setInterval(function () {
+      simSeconds += 20;
+      var m = Math.floor(simSeconds / 60), s = simSeconds % 60;
+      $("m-timer").textContent = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+      if (m >= 10 && !flags.long) { flags.long = true; addSignal("Long call with an unverified number (10+ min)", "Call behaviour", 20); }
+      if (m >= 19 && !flags.bank) { flags.bank = true; ctx.bank = true; $("m-bank").hidden = false; addSignal("Banking app opened during the call", "Phone activity", 20); }
+      if (m >= 24 && !flags.msg) {
+        flags.msg = true; clearInterval(iv); ctx.callMinutes = 24;
+        deliverMessage("+60 11-2394 8812", "Ini Inspektor Rahman dari PDRM. Akaun anda terlibat dalam siasatan pengubahan wang haram. Jangan beritahu sesiapa, termasuk anak anda. Pindahkan simpanan anda ke akaun selamat hari ini.", false, ctx);
+      }
+    }, 100);
+    state.call = { interval: iv }; state.timers.push(iv);
+  }
+  function scenarioInvest() {
+    if (!state.setup) completeSetup();
+    resetRun();
+    $("hint").textContent = "A message arrives on Mum's phone.";
+    deliverMessage("+60 17-880 3021", "Hi Auntie, join our VIP investment group. Guaranteed 30% returns in 7 days! Transfer RM500 to secure your slot. Keep this between us ok.", false);
+  }
+  function scenarioClinic() {
+    if (!state.setup) completeSetup();
+    resetRun();
+    $("hint").textContent = "A normal reminder arrives. Watch for false alarms.";
+    deliverMessage("Klinik Sejahtera (saved)", "Peringatan: temujanji anda esok, 9:30 pagi. Sila bawa MyKad. Reminder: your appointment is tomorrow at 9:30 am.", true);
+  }
+  function sendCustom() {
+    var text = $("custom").value.trim();
+    if (!text) { $("hint").textContent = "Type a message first, then send it to Mum's phone."; return; }
+    if (!state.setup) completeSetup();
+    resetRun();
+    $("hint").textContent = "Your message arrives on Mum's phone from an unknown number.";
+    deliverMessage("+60 12-555 0199", text, false);
+  }
+
+  /* ---------- wiring ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll("#mum .pill"), function (p) {
+    p.addEventListener("click", function () { state.lang = p.dataset.lang; applyLang(); });
+  });
+  $("m-consent").addEventListener("change", function () { $("m-start").disabled = !$("m-consent").checked; });
+  $("m-start").addEventListener("click", completeSetup);
+  $("m-answer").addEventListener("click", function () { clearTimers(); answerCall(); });
+  $("m-decline").addEventListener("click", function () {
+    clearTimers(); show("mum", "m-home"); addRecent("m-recent", t("recDeclined"));
+    addSignal("Mum declined the call: no further action", "Decision", 0);
+  });
+
+  $("m-callfam").addEventListener("click", function () {
+    mumOverlay(state.lang === "ms" ? "Menghubungi Aisyah…" : "Calling Aisyah…", state.lang === "ms" ? "Demo: tiada panggilan sebenar dibuat." : "Demo: no real call is made.", null, null, state.lang === "ms" ? "Batal" : "Cancel");
+    $("f-push").classList.remove("show");
+    famOverlay("Mum is calling", "Incoming call from Mum.", "Answer", function () { connected("mum"); }, "Decline");
+  });
+  $("m-997").addEventListener("click", function () {
+    mumOverlay(state.lang === "ms" ? "Menghubungi NSRC 997…" : "Calling NSRC 997…", state.lang === "ms" ? "National Scam Response Centre. Demo: dalam aplikasi sebenar, ini membuka pendail telefon anda." : "National Scam Response Centre. Demo: in the real app this opens your phone's dialler.", null, null, state.lang === "ms" ? "Tutup" : "Close");
+    if (state.alertActive) addTimeline("Mum called NSRC 997", true);
+    addSignal("Mum chose to call NSRC 997", "Outcome", 0);
+  });
+  $("m-freeze").addEventListener("click", function () {
+    var ms = state.lang === "ms";
+    mumOverlay(ms ? "Bekukan perbankan dalam talian?" : "Freeze online banking?", ms ? "Ini membuka suis pemutus (kill switch) bank anda. Tiada wang boleh dipindahkan sehingga anda menghubungi bank." : "This opens your bank's kill switch. No money can be moved until you call your bank.", ms ? "Bekukan sekarang" : "Freeze now", function () {
+      mumOverlay(ms ? "Perbankan dalam talian dibekukan" : "Online banking frozen", ms ? "Demo. Hubungi bank anda untuk membukanya semula." : "Demo. Call your bank to unfreeze it.", null, null, ms ? "Selesai" : "Done");
+      if (state.alertActive) addTimeline("Mum froze her online banking", true);
+      addSignal("Mum froze her online banking", "Outcome", 0);
+    }, ms ? "Batal" : "Cancel");
+  });
+  $("m-dismiss").addEventListener("click", function () {
+    show("mum", "m-home");
+    if (state.alertActive) addTimeline("Mum dismissed the warning", true);
+    addSignal("Mum dismissed: recorded as feedback", "Outcome", 0);
+  });
+  $("m-tipok").addEventListener("click", function () { $("m-sheet").classList.remove("show"); $("m-sheet").setAttribute("aria-hidden", "true"); });
+  $("m-tipdel").addEventListener("click", function () { $("m-sheet").classList.remove("show"); $("m-sheet").setAttribute("aria-hidden", "true"); addSignal("Mum deleted the message", "Outcome", 0); });
+
+  $("f-push").addEventListener("click", openAlert);
+  $("f-push").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openAlert(); } });
+  $("f-callmum").addEventListener("click", function () {
+    famOverlay("Calling Mum…", "Demo: no real call is made.", null, null, "Cancel");
+    var ms = state.lang === "ms";
+    mumOverlay(ms ? "Aisyah sedang menelefon" : "Aisyah is calling", ms ? "Panggilan masuk daripada anak anda." : "Incoming call from your daughter.", ms ? "Jawab" : "Answer", function () { connected("aisyah"); }, ms ? "Tolak" : "Decline");
+  });
+  $("f-997").addEventListener("click", function () {
+    famOverlay("Calling NSRC 997…", "National Scam Response Centre. Demo: in the real app this opens your dialler.", null, null, "Close");
+    addTimeline("You called NSRC 997", true);
+  });
+  $("f-false").addEventListener("click", function () {
+    state.alertActive = false;
+    show("fam", "f-home"); show("mum", "m-home");
+    $("f-status").textContent = "Mum is protected";
+    addRecent("f-recent", "You marked an alert as a false alarm");
+    addSignal("Marked false alarm: used to retrain the model", "Feedback", 0);
+  });
+  $("f-back").addEventListener("click", function () { show("fam", "f-home"); });
+  Array.prototype.forEach.call(document.querySelectorAll("#fam .tab"), function (b) {
+    b.addEventListener("click", function () { show("fam", b.dataset.go); });
+  });
+
+  $("sc-police").addEventListener("click", scenarioPolice);
+  $("sc-invest").addEventListener("click", scenarioInvest);
+  $("sc-clinic").addEventListener("click", scenarioClinic);
+  $("sendCustom").addEventListener("click", sendCustom);
+  $("reset").addEventListener("click", function () {
+    resetRun(); clearSignals();
+    $("signals").innerHTML = '<li class="empty">No signals yet. Run a scenario.</li>';
+    counts = { calls: 0, msgs: 0, alerts: 0 };
+    ["calls", "msgs", "alerts"].forEach(function (k) { $("f-" + k).textContent = "0"; });
+    $("f-recent").innerHTML = '<li><time></time><span style="color: var(--app-muted)">Nothing yet today.</span></li>';
+    $("f-status").textContent = "Mum is protected";
+    $("hint").textContent = state.setup ? "Demo reset. Pick a scenario." : "Finish set-up on Mum's phone first, or pick a scenario to skip it.";
+  });
+
+  applyLang();
+})();
+</script>
+
+</body>
+</html>
